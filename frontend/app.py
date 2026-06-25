@@ -100,10 +100,10 @@ elif selected == "Training":
         st.subheader("Training Configuration")
         
         dataset_name = st.text_input("Dataset Name", "glioma")
-        epochs = st.slider("Epochs", 10, 200, 50)
+        epochs = st.slider("Epochs", 10, 1000, 50)
         batch_size = st.selectbox("Batch Size", [16, 32, 64], index=1)
         learning_rate = st.number_input("Learning Rate", value=0.0002, format="%.4f")
-        image_size = st.selectbox("Image Size", [64, 128, 256], index=1)
+        image_size = st.selectbox("Image Size", [64, 128, 256], index=0)
         
         if st.button("🚀 Start Training", type="primary"):
             config = {
@@ -125,24 +125,35 @@ elif selected == "Training":
     with col2:
         st.subheader("Training Status")
         
-        if st.button("🔄 Refresh Status"):
-            try:
-                response = requests.get(f"{API_URL}/training-status/")
-                if response.status_code == 200:
-                    status = response.json()
-                    
-                    st.markdown(f"""
-                    **Is Training:** {status['is_training']}  
-                    **Current Epoch:** {status['current_epoch']}/{status['total_epochs']}  
-                    **Generator Loss:** {status['gen_loss']:.4f}  
-                    **Discriminator Loss:** {status['disc_loss']:.4f}
-                    """)
-                    
-                    if status['is_training'] and status['total_epochs'] > 0:
-                        progress = status['current_epoch'] / status['total_epochs']
-                        st.progress(progress)
-            except:
-                st.error("Cannot fetch status")
+        try:
+            response = requests.get(f"{API_URL}/training-status/", timeout=5)
+            if response.status_code == 200:
+                status = response.json()
+                
+                if status['is_training']:
+                    st.success("🟢 Training in progress...")
+                else:
+                    st.info("⚪ Not training")
+                
+                st.metric("Current Epoch", f"{status['current_epoch']}/{status['total_epochs']}")
+                st.metric("Generator Loss", f"{status['gen_loss']:.4f}")
+                st.metric("Discriminator Loss", f"{status['disc_loss']:.4f}")
+                
+                if status['is_training'] and status['total_epochs'] > 0:
+                    progress = status['current_epoch'] / status['total_epochs']
+                    st.progress(progress)
+                    st.caption("Auto-refreshing...")
+                    import time
+                    time.sleep(2)
+                    st.rerun()
+            else:
+                st.error(f"API Error: {response.status_code}")
+        except requests.exceptions.Timeout:
+            st.error("API timeout - check if backend is running")
+        except requests.exceptions.ConnectionError:
+            st.error("Cannot connect to API - make sure backend is running on port 8888")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
 
 elif selected == "Generate":
     st.title("🎨 Generate Synthetic Images")

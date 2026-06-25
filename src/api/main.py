@@ -125,7 +125,13 @@ def train_model(config: TrainingConfig):
 
 @app.get("/training-status/")
 def get_training_status():
-    return training_state
+    return {
+        "is_training": training_state.get("is_training", False),
+        "current_epoch": training_state.get("current_epoch", 0),
+        "total_epochs": training_state.get("total_epochs", 0),
+        "gen_loss": training_state.get("gen_loss", 0.0),
+        "disc_loss": training_state.get("disc_loss", 0.0)
+    }
 
 @app.post("/generate/")
 async def generate_samples(request: GenerateRequest):

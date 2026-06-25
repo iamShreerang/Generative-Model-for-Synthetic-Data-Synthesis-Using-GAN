@@ -85,6 +85,9 @@ class GANTrainer:
         samples = self.generate_samples(num_samples)
         
         for i, sample in enumerate(samples):
-            plt.imsave(os.path.join(output_dir, f"synthetic_image_{i}.png"), sample)
+            sample = np.clip(sample, 0, 1)
+            sample_uint8 = (sample * 255).astype(np.uint8)
+            from PIL import Image
+            Image.fromarray(sample_uint8).save(os.path.join(output_dir, f"synthetic_image_{i}.png"))
         
         return output_dir

@@ -11,27 +11,35 @@ class DCGAN:
         self.discriminator = self.build_discriminator()
     
     def build_generator(self):
-        model = keras.Sequential([
-            layers.Dense(8 * 8 * 256, input_dim=self.noise_dim, use_bias=False),
-            layers.BatchNormalization(),
-            layers.LeakyReLU(0.2),
-            layers.Reshape((8, 8, 256)),
-            
-            layers.Conv2DTranspose(128, (5, 5), strides=(2, 2), padding='same', use_bias=False),
-            layers.BatchNormalization(),
-            layers.LeakyReLU(0.2),
-            
-            layers.Conv2DTranspose(64, (5, 5), strides=(2, 2), padding='same', use_bias=False),
-            layers.BatchNormalization(),
-            layers.LeakyReLU(0.2),
-            
-            layers.Conv2DTranspose(32, (5, 5), strides=(2, 2), padding='same', use_bias=False),
-            layers.BatchNormalization(),
-            layers.LeakyReLU(0.2),
-            
-            layers.Conv2DTranspose(self.channels, (5, 5), strides=(2, 2), padding='same', activation='tanh')
-        ], name="generator")
+        if self.image_size == 64:
+            initial_size = 4
+            filters = [512, 256, 128, 64]
+        elif self.image_size == 128:
+            initial_size = 4
+            filters = [512, 256, 128, 64, 32]
+        else:  # 256
+            initial_size = 4
+            filters = [512, 256, 128, 64, 32, 16]
         
+        layers_list = [
+            layers.Dense(initial_size * initial_size * filters[0], input_dim=self.noise_dim, use_bias=False),
+            layers.BatchNormalization(),
+            layers.LeakyReLU(0.2),
+            layers.Reshape((initial_size, initial_size, filters[0]))
+        ]
+        
+        for f in filters[1:]:
+            layers_list.extend([
+                layers.Conv2DTranspose(f, (5, 5), strides=(2, 2), padding='same', use_bias=False),
+                layers.BatchNormalization(),
+                layers.LeakyReLU(0.2)
+            ])
+        
+        layers_list.append(
+            layers.Conv2DTranspose(self.channels, (5, 5), strides=(2, 2), padding='same', activation='tanh')
+        )
+        
+        model = keras.Sequential(layers_list, name="generator")
         return model
     
     def build_discriminator(self):
