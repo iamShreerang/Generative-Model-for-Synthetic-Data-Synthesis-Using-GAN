@@ -25,6 +25,8 @@ services:
     volumes:
       - ./Dataset:/app/Dataset
       - ./Synthetic Data:/app/Synthetic Data
+    environment:
+      - API_URL=http://api:8000
     depends_on:
       - api
     command: streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0

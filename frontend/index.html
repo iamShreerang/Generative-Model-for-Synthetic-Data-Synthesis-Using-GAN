@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SynthGen — GAN Synthetic Data Platform</title>
+  <meta name="description" content="Generate realistic synthetic medical images using Deep Convolutional GAN." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Cursor glow that follows mouse -->
+  <div id="cursor-glow"></div>
+
+  <!-- Background floating particles (divs, not canvas — so anime.js controls each individually) -->
+  <div id="particles-wrap"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-indicator" id="sidebar-indicator"></div>
+
+    <div class="logo-wrap">
+      <svg class="logo-svg" viewBox="0 0 40 40">
+        <defs>
+          <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7c3aed" />
+            <stop offset="100%" stop-color="#22d3ee" />
+          </linearGradient>
+        </defs>
+        <circle cx="20" cy="20" r="18" fill="none" stroke="url(#lg)" stroke-width="1.5" />
+        <path d="M10 20 Q15 10 20 20 Q25 30 30 20" fill="none" stroke="url(#lg)" stroke-width="2.5"
+          stroke-linecap="round" />
+        <circle cx="20" cy="20" r="3" fill="url(#lg)" />
+      </svg>
+      <div>
+        <div class="logo-name">SynthGen</div>
+        <div class="logo-sub">Neural Forge v2</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-item active" data-page="home" data-idx="0" onclick="navigate('home',0)">
+        <span class="nav-glyph">⬡</span><span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="dataset" data-idx="1" onclick="navigate('dataset',1)">
+        <span class="nav-glyph">◈</span><span>Datasets</span>
+      </div>
+      <div class="nav-item" data-page="training" data-idx="2" onclick="navigate('training',2)">
+        <span class="nav-glyph">◎</span><span>Training</span>
+      </div>
+      <div class="nav-item" data-page="generate" data-idx="3" onclick="navigate('generate',3)">
+        <span class="nav-glyph">✦</span><span>Generate</span>
+      </div>
+      <div class="nav-item" data-page="evaluation" data-idx="4" onclick="navigate('evaluation',4)">
+        <span class="nav-glyph">◇</span><span>Evaluation</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div id="api-dot" class="api-dot offline"></div>
+      <span id="api-text" class="api-text">Connecting…</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="main">
+
+    <!-- ====== HOME ====== -->
+    <section class="page active" id="page-home">
+
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-left">
+          <div class="hero-chip">
+            <span class="chip-pulse"></span>
+            DCGAN · TensorFlow 2.x
+          </div>
+          <h1 class="hero-title" id="hero-title"></h1>
+          <p class="hero-p">Generate photorealistic synthetic medical images. Train your own Deep Convolutional GAN,
+            then synthesise unlimited labelled data.</p>
+          <div class="hero-actions">
+            <button class="btn-hero ripple-btn" onclick="navigate('dataset',1)">Start Building <span>→</span></button>
+            <button class="btn-ghost ripple-btn" onclick="navigate('training',2)">Train Model</button>
+          </div>
+        </div>
+        <div class="hero-right">
+          <!-- Neural network built by JS -->
+          <div class="network-container">
+            <svg id="net-svg" viewBox="0 0 460 240" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="net-labels">
+              <span>Noise&nbsp;z</span><span>Generator</span><span>Discriminator</span><span>Output</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animated grid cells (ripple on load) -->
+      <div class="cell-grid" id="cell-grid"></div>
+
+      <!-- Stats bar -->
+      <div class="stats-bar" id="stats-bar">
+        <div class="sbar-item"><span class="sbar-val" id="sb-datasets">0</span><span class="sbar-lbl">Datasets</span>
+        </div>
+        <div class="sbar-div"></div>
+        <div class="sbar-item"><span class="sbar-val" id="sb-models">0</span><span class="sbar-lbl">Models
+            Trained</span></div>
+        <div class="sbar-div"></div>
+        <div class="sbar-item"><span class="sbar-val" id="sb-api">—</span><span class="sbar-lbl">API Status</span></div>
+        <div class="sbar-div"></div>
+        <div class="sbar-item"><span class="sbar-val">DCGAN</span><span class="sbar-lbl">Architecture</span></div>
+      </div>
+
+      <!-- Cards -->
+      <div class="home-cards">
+        <div class="card">
+          <div class="card-icon-row"><span class="card-icon">🧬</span><span class="card-badge">Core Features</span>
+          </div>
+          <h3 class="card-h">What you can do</h3>
+          <ul class="feat-list">
+            <li><span class="tick">✓</span> Upload &amp; manage image datasets</li>
+            <li><span class="tick">✓</span> Train Deep Convolutional GAN models</li>
+            <li><span class="tick">✓</span> Generate unlimited synthetic images</li>
+            <li><span class="tick">✓</span> Evaluate with FID, SSIM &amp; PSNR</li>
+            <li><span class="tick">✓</span> Real-time training loss monitoring</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon-row"><span class="card-icon">⚡</span><span class="card-badge">Quick Start</span></div>
+          <h3 class="card-h">4 steps to synth data</h3>
+          <div class="steps">
+            <div class="step">
+              <div class="step-n">01</div>
+              <div><b>Upload Dataset</b>
+                <p>Add JPG/PNG images in Datasets</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-n">02</div>
+              <div><b>Configure Training</b>
+                <p>Set epochs, batch size &amp; LR</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-n">03</div>
+              <div><b>Generate Images</b>
+                <p>Create synthetic data from your model</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-n">04</div>
+              <div><b>Evaluate Quality</b>
+                <p>FID, SSIM and PSNR scores</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== DATASET ====== -->
+    <section class="page" id="page-dataset">
+      <div class="ph">
+        <div>
+          <h1 class="ptitle">Dataset Manager</h1>
+          <p class="psub">Upload and manage your training datasets</p>
+        </div>
+        <button class="btn-sm ripple-btn" onclick="loadDatasets()">↻ Refresh</button>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <h3 class="card-h">Upload New Dataset</h3>
+          <div class="fg"><label class="fl">Dataset Name</label><input class="fi" id="ds-name" value="my_dataset" />
+          </div>
+          <div class="drop-zone" id="drop-zone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave(event)">
+            <div class="dz-icon">⬆</div>
+            <p class="dz-text">Drag &amp; drop images here</p>
+            <p class="dz-sub">or <label for="file-in" class="dz-link">browse files</label></p>
+            <p class="dz-hint">JPG · JPEG · PNG</p>
+            <input type="file" id="file-in" multiple accept=".jpg,.jpeg,.png" onchange="handleFileSelect(event)"
+              hidden />
+          </div>
+          <div id="file-chips" class="chips-row"></div>
+          <button class="btn-primary btn-full ripple-btn" id="upload-btn" onclick="uploadDataset()">Upload
+            Dataset</button>
+          <div id="upload-msg"></div>
+        </div>
+        <div class="card">
+          <h3 class="card-h">Available Datasets</h3>
+          <div id="ds-list">
+            <div class="empty-s"><span>◈</span>
+              <p>No datasets yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== TRAINING ====== -->
+    <section class="page" id="page-training">
+      <div class="ph">
+        <div>
+          <h1 class="ptitle">Model Training</h1>
+          <p class="psub">Configure and monitor GAN training in real-time</p>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <h3 class="card-h">Configuration</h3>
+          <div class="fg"><label class="fl">Dataset Name</label><input class="fi" id="tr-dataset" value="glioma" />
+          </div>
+          <div class="fg">
+            <label class="fl">Epochs: <b id="ep-val">50</b></label>
+            <input type="range" class="frange" id="tr-epochs" min="10" max="1000" value="50"
+              oninput="document.getElementById('ep-val').textContent=this.value" />
+          </div>
+          <div class="fg">
+            <label class="fl">Batch Size</label>
+            <div class="toggle-row">
+              <button class="tog active" onclick="setToggle(this,'tr-batch',16)">16</button>
+              <button class="tog" onclick="setToggle(this,'tr-batch',32)">32</button>
+              <button class="tog" onclick="setToggle(this,'tr-batch',64)">64</button>
+            </div>
+            <input type="hidden" id="tr-batch" value="16" />
+          </div>
+          <div class="fg"><label class="fl">Learning Rate</label><input type="number" class="fi" id="tr-lr"
+              value="0.0002" step="0.0001" /></div>
+          <div class="fg">
+            <label class="fl">Image Size</label>
+            <div class="toggle-row">
+              <button class="tog active" onclick="setToggle(this,'tr-size',64)">64px</button>
+              <button class="tog" onclick="setToggle(this,'tr-size',128)">128px</button>
+              <button class="tog" onclick="setToggle(this,'tr-size',256)">256px</button>
+            </div>
+            <input type="hidden" id="tr-size" value="64" />
+          </div>
+          <button class="btn-primary btn-full ripple-btn" id="tr-btn" onclick="startTraining()">🚀 Start
+            Training</button>
+          <div id="tr-msg"></div>
+        </div>
+        <div class="card">
+          <h3 class="card-h">Live Status</h3>
+          <!-- Pulsing neural flow visualization -->
+          <div class="train-visual" id="train-visual">
+            <svg id="flow-svg" viewBox="0 0 300 80" width="100%" height="80"></svg>
+          </div>
+          <div class="tr-state" id="tr-state">
+            <div class="tr-ring" id="tr-ring"></div>
+            <span id="tr-state-txt">Idle — waiting to train</span>
+          </div>
+          <div class="metrics-row">
+            <div class="mbox"><span class="mv" id="m-ep">0/0</span><span class="ml">Epoch</span></div>
+            <div class="mbox"><span class="mv" id="m-gl">0.0000</span><span class="ml">Gen Loss</span></div>
+            <div class="mbox"><span class="mv" id="m-dl">0.0000</span><span class="ml">Disc Loss</span></div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="prog-fill"></div>
+          </div>
+          <div class="prog-label" id="prog-label">0%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== GENERATE ====== -->
+    <section class="page" id="page-generate">
+      <div class="ph">
+        <div>
+          <h1 class="ptitle">Generate Images</h1>
+          <p class="psub">Synthesise images from your trained models</p>
+        </div>
+        <button class="btn-sm ripple-btn" onclick="loadModels()">↻ Refresh Models</button>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <h3 class="card-h">Settings</h3>
+          <div class="fg">
+            <label class="fl">Number of Images: <b id="ns-val">16</b></label>
+            <input type="range" class="frange" id="num-samples" min="1" max="100" value="16"
+              oninput="document.getElementById('ns-val').textContent=this.value" />
+          </div>
+          <div class="fg"><label class="fl">Select Model</label><select class="fi" id="model-sel">
+              <option>Loading…</option>
+            </select></div>
+          <button class="btn-primary btn-full ripple-btn" id="gen-btn" onclick="generateImages()">✨ Generate
+            Images</button>
+          <div id="gen-msg"></div>
+        </div>
+        <div class="card">
+          <h3 class="card-h">Generated Samples</h3>
+          <div class="gallery" id="gallery">
+            <div class="empty-s"><span>✦</span>
+              <p>Generate to see images here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== EVALUATION ====== -->
+    <section class="page" id="page-evaluation">
+      <div class="ph">
+        <div>
+          <h1 class="ptitle">Evaluation</h1>
+          <p class="psub">Measure synthetic data quality with industry metrics</p>
+        </div>
+      </div>
+      <div class="eval-cards" id="eval-cards">
+        <div class="eval-card" id="ec-fid">
+          <div class="ec-label">FID Score</div>
+          <div class="ec-val" id="ev-fid">—</div>
+          <div class="ec-hint">Lower is better</div>
+          <svg class="ec-ring-svg" viewBox="0 0 60 60">
+            <circle class="ec-ring-bg" cx="30" cy="30" r="24" />
+            <circle class="ec-ring-fg" id="er-fid" cx="30" cy="30" r="24" />
+          </svg>
+        </div>
+        <div class="eval-card" id="ec-ssim">
+          <div class="ec-label">SSIM</div>
+          <div class="ec-val" id="ev-ssim">—</div>
+          <div class="ec-hint">0–1, Higher is better</div>
+          <svg class="ec-ring-svg" viewBox="0 0 60 60">
+            <circle class="ec-ring-bg" cx="30" cy="30" r="24" />
+            <circle class="ec-ring-fg" id="er-ssim" cx="30" cy="30" r="24" />
+          </svg>
+        </div>
+        <div class="eval-card" id="ec-psnr">
+          <div class="ec-label">PSNR (dB)</div>
+          <div class="ec-val" id="ev-psnr">—</div>
+          <div class="ec-hint">Higher is better</div>
+          <svg class="ec-ring-svg" viewBox="0 0 60 60">
+            <circle class="ec-ring-bg" cx="30" cy="30" r="24" />
+            <circle class="ec-ring-fg" id="er-psnr" cx="30" cy="30" r="24" />
+          </svg>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <h3 class="card-h">Calculate Metrics</h3>
+          <div class="fg"><label class="fl">Real Dataset</label>
+            <select class="fi" id="ev-real">
+              <option>glioma</option>
+              <option>meningioma</option>
+              <option>notumor</option>
+              <option>pituitary</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Synthetic Images Folder</label><input class="fi" id="ev-synth"
+              value="./Synthetic Data/generated_from_trained" /></div>
+          <button class="btn-primary btn-full ripple-btn" id="ev-btn" onclick="calcMetrics()">📊 Calculate
+            Metrics</button>
+          <div id="ev-msg"></div>
+        </div>
+        <div class="card">
+          <h3 class="card-h">Metric Guide</h3>
+          <div class="guide">
+            <div class="guide-item"><b>FID</b> — Fréchet Inception Distance measures distribution distance between real
+              and fake images. Lower = better quality &amp; diversity.</div>
+            <div class="guide-item"><b>SSIM</b> — Structural Similarity compares luminance, contrast and structure.
+              Score of 1.0 = perfect structural match.</div>
+            <div class="guide-item"><b>PSNR</b> — Peak Signal-to-Noise Ratio measures pixel-level fidelity in dB. Higher
+              = less noise distortion.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- anime.js v4 UMD (global: anime, {animate, stagger, timeline, ...}) -->
+  <script src="anime.min.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

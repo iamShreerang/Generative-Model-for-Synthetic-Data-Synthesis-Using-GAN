@@ -21,7 +21,7 @@ with st.sidebar:
     st.markdown("Using Deep Convolutional GAN")
 
 # API Base URL
-API_URL = "http://localhost:8888"
+API_URL = os.environ.get("API_URL", "http://localhost:8000")
 
 if selected == "Home":
     st.title("🧬 Synthetic Data Generation Platform")
